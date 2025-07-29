@@ -6,7 +6,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import spectre from './package/src';
 
-import node from '@astrojs/node';
+import netlify from '@astrojs/netlify'; // GANTI adapter dari `@astrojs/node` ke Netlify
 import { spectreDark } from './src/ec-theme';
 
 const {
@@ -21,9 +21,8 @@ const {
   GISCUS_LANG
 } = loadEnv(process.env.NODE_ENV!, process.cwd(), "");
 
-// https://astro.build/config
 const config = defineConfig({
-  site: 'https://spectre.louisescher.dev',
+  site: 'https://baradika.my.id', // GANTI ke domain kamu
   output: 'static',
   integrations: [
     expressiveCode({
@@ -48,9 +47,7 @@ const config = defineConfig({
       }
     })
   ],
-  adapter: node({
-    mode: 'standalone'
-  })
+  adapter: netlify() // ✅ PENTING: ini yang membuatnya bisa jalan di Netlify
 });
 
 export default config;
