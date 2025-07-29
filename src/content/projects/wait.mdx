@@ -1,0 +1,95 @@
+---
+title: Very-Basic Simple Go Auth API
+date: 07-29-2025
+description: this is just what all i got :v
+image: ../assets/golang.png
+info:
+  - text: GitHub
+    link: https://github.com/baradika/go-auth-api
+    icon:
+      type: lucide
+      name: github
+---
+
+Go Auth API is a RESTful authentication backend built with **Go** using the [Gin](https://github.com/gin-gonic/gin) web framework.  
+It supports secure user registration and login with JWT-based sessionless authentication, built using clean code architecture principles.
+
+## Features
+- Register & login with password hashing (bcrypt)
+- JWT token authentication
+- Protected routes with middleware
+- Clean folder structure with MVC-style separation
+- Lightweight SQLite database
+
+## Folder Structure
+```
+go-auth-api/
+│───main.go
+│
+├───config
+│       database.go
+│
+├───controllers
+│       auth_controller.go
+│
+├───middlewares
+│       auth_middleware.go
+│
+├───models
+│       user.go
+│
+├───routes
+│       routes.go
+│
+├───services
+│       auth_service.go
+│
+└───utils
+        jwt.go
+```
+## Example Usage
+
+### Register
+
+```http
+POST /register
+{
+    "email": "b4r@gmail.com",
+    "name": "b4r",
+    "password": "1sampai3"
+}
+```
+### Login 
+```http
+POST /api/login
+{
+    "email": "b4r@gmail.com",
+    "password": "1sampai3"
+}
+```
+### Get All Users
+```http
+GET /api/users
+Authorization: Bearer <jwt>
+```
+
+### Account Info 
+```http
+GET /api/users
+Authorization: Bearer <jwt>
+```
+
+### Change Accout Info 
+```http
+PUT /api/profile
+{
+    "name": "berak",
+    "email": "b4rac@gmail.com", //unfill the var if u dont want update 
+    "password": "123456" 
+}
+```
+### Tech Stack
+* Language: Go
+* Framework: Gin
+* Database: SQLite
+* Security: JWT & bcrypt

@@ -1,0 +1,42 @@
+---
+title: "UIUCTF 2025"
+description: "goofy ahh write-up"
+image: "../assets/uiu.png"
+createdAt: 07-29-2025
+draft: false
+tags:
+  - write-up
+---
+
+Today i wanna share a write-up of challs that i have been solved in `UIUCTF 2025` ...........
+
+
+## crypto
+### the shortest crypto chal
+
+#### Challenge Overview
+
+We are given the following Python code in `chal.py`:
+```py
+from Crypto.Cipher import AES
+from hashlib import md5
+from secret import a,b,c,d, FLAG
+
+assert a**4 + b**4 == c**4 + d**4 + 17 and max(a,b,c,d) < 2e4 and AES.new( f"{a*b*c*d}".zfill(16).encode() , AES.MODE_ECB).encrypt(FLAG).hex() == "41593455378fed8c3bd344827a193bde7ec2044a3f7a3ca6fb77448e9de55155"
+```
+This script defines an assertion over 4 integers `a`, `b`, `c`, `d`, such that their fourth powers satisfy a specific relationship, and a given AES-ECB ciphertext must be the encryption of the flag using the key derived from `a*b*c*d`.
+
+#### Observations
+1. The flag is encrypted with AES in ECB mode.
+2. The encryption key is derived by computing the product `a*b*c*d`, converting it to a zero-padded string of length 16.
+3. The values `a, b, c, d` are all less than 20,000.
+4. The equation to solve is: `a^4 + b^4 = c^4 + d^4 + 17` which is a Diophantine equation with a small offset.
+
+This resembles a variation of the taxicab number problem (sums of two fourth powers), which is solvable by precomputing possibilities.
+
+#### Strategy
+To recover the plaintext flag:
+1. Precompute all valid right-hand sides (RHS) of the equation `c^4 + d^4` for all `1 <= c,d < n` with `d <= c`
+2. For each possible pair `(a, b)` (with `b <= a`), compute the left-hand side `a^4 + b^4 - 17`.
+3. Binary search the RHS list for a match. If found:
+* Compute the possible c and check if d^4 = lhs - c^4 gives an integer d.

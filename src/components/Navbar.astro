@@ -14,11 +14,7 @@ const path = Astro.url.pathname;
     <li>
       <a href="/projects" class:list={{ active: path.startsWith('/projects') }}>Projects</a>
     </li>
-    <li class="nav-separator">/</li>
-    <li>
-      <input id="search" type="text" placeholder="Search (Ctrl+K)" />
-      <div id="search-results"></div>
-    </li>
+    <li class="nav-separator"></li>
   </ul>
   <button class="mobile-nav-toggle">
     <Icon type="lucide" name="menu" width={24} height={24} class="menu-closed" />
@@ -26,8 +22,6 @@ const path = Astro.url.pathname;
   </button>
 </nav>
 <script is:inline>
-  const searchElement = document.querySelector('#search');
-  const results = document.querySelector('#search-results');
   const navToggle = document.querySelector('.mobile-nav-toggle');
 
   let focusIndex = -1;

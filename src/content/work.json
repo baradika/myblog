@@ -1,9 +1,30 @@
 [
   {
     "id": 1,
-    "duration": "2024 - present",
-    "company": "Astro Community",
+    "duration": "2025",
+    "company": "[International] Write-up Contest Winner in TJCTF 2025",
+    "title": "TJCTF",
+    "description": "A Capture The Flag competition held by TJCTF."
+  },
+  {
+    "id": 2,
+    "duration": "2025",
+    "company": "[Province] 3rd In LKS Cybersecurity Category 2025",
     "title": "Astro Theme",
     "description": "Existing as an Astro theme for anyone to use."
+  },
+  {
+    "id": 3,
+    "duration": "2025",
+    "company": "[Cities] 2nd In LKS Cybersecurity Category 2025",
+    "title": "UIUCTF",
+    "description": "A Capture The Flag competition held by Universitas Indonesia."
+  },
+  {
+    "id": 4,
+    "duration": "2025",
+    "company": "[International] Write-up Contest Winner in BreachCTF 2025",
+    "title": "BreachCTF",
+    "description": "A Capture The Flag competition held by Telkom University."
   }
 ]

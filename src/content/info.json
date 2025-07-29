@@ -3,17 +3,17 @@
     "id": 1,
     "icon": {
       "type": "lucide",
-      "name": "cake"
+      "name": "map-pin"
     },
-    "text": "1 year old"
+    "text": "Jakarta, Indonesia"
   },
   {
     "id": 2,
     "icon": {
       "type": "lucide",
-      "name": "earth"
+      "name": "school"
     },
     "type": "lucide",
-    "text": "Made in Germany"
+    "text": "SMKN 24 Jakarta"
   }
 ]
