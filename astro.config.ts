@@ -5,8 +5,8 @@ import expressiveCode from 'astro-expressive-code';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import spectre from './package/src';
-
-import netlify from '@astrojs/netlify'; // GANTI adapter dari `@astrojs/node` ke Netlify
+import netlify from '@astrojs/netlify';
+import pagefind from 'astro-pagefind'; // ✅ tambahkan ini
 import { spectreDark } from './src/ec-theme';
 
 const {
@@ -22,7 +22,7 @@ const {
 } = loadEnv(process.env.NODE_ENV!, process.cwd(), "");
 
 const config = defineConfig({
-  site: 'https://baradika.my.id', // GANTI ke domain kamu
+  site: 'https://bar.netlify.app',
   output: 'static',
   integrations: [
     expressiveCode({
@@ -45,9 +45,12 @@ const config = defineConfig({
           title: 'Projects'
         }
       }
+    }),
+    pagefind({
+      entrySelector: 'main', // ✅ penting, biar indexing jalan
     })
   ],
-  adapter: netlify() 
+  adapter: netlify()
 });
 
 export default config;
