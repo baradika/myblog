@@ -47,7 +47,7 @@ const config = defineConfig({
       }
     })
   ],
-  adapter: netlify() // ✅ PENTING: ini yang membuatnya bisa jalan di Netlify
+  adapter: netlify() 
 });
 
 export default config;
