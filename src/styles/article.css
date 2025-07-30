@@ -1,3 +1,6 @@
+/* ===================================== */
+/* Article layout & heading adjustments */
+/* ===================================== */
 article h1,
 article h2,
 article h3,
@@ -11,28 +14,38 @@ article {
   min-width: 0;
 }
 
-article hr {
-  height: 1px;
-  border: none;
-  background-color: #353535;
-}
-
-/* ✅ FIXED: Gambar agar tidak gepeng */
-p:has(img) {
+/* ========================== */
+/* Gambar dalam article only */
+/* ========================== */
+article p:has(img) {
   display: block;
   text-align: center;
   margin-top: 1rem;
   margin-bottom: 1rem;
 }
 
-p img {
+article p img {
   max-width: 100%;
   height: auto;
   display: inline-block;
 }
 
+/* ============================= */
+/* Horizontal rule in article   */
+/* ============================= */
+article hr {
+  height: 1px;
+  border: none;
+  background-color: #353535;
+}
+
+/* ========================= */
+/* TOC (Table of Contents)  */
+/* ========================= */
 .toc-card {
   min-width: 0;
+  position: sticky;
+  top: 2rem;
 }
 
 .toc-card ol {
@@ -66,6 +79,9 @@ p img {
   margin-left: 2rem;
 }
 
+/* =================== */
+/* Utility class      */
+/* =================== */
 .no-mt {
   margin-top: 0;
 }
@@ -75,14 +91,12 @@ ol li a.active {
   background: var(--primary);
 }
 
+/* ============================ */
+/* Article Header & Meta Style */
+/* ============================ */
 .left {
   height: 100%;
   position: relative;
-}
-
-.toc-card {
-  position: sticky;
-  top: 2rem;
 }
 
 .article-header {
@@ -129,6 +143,9 @@ ol li a.active {
   width: fit-content;
 }
 
+/* ======================================= */
+/* Mobile Responsive for Article Header   */
+/* ======================================= */
 @media screen and (max-width: 640px) {
   .header {
     position: relative;
@@ -154,18 +171,27 @@ ol li a.active {
   }
 }
 
+/* ================ */
+/* Inline <code>   */
+/* ================ */
 code:not(.astro-code code) {
   background-color: #353535;
   padding: .125rem .25rem;
   font-size: .925rem;
 }
 
+/* ====================== */
+/* Gambar Header Artikel */
+/* ====================== */
 .article-image {
-  width: auto;
+  width: 100%;
   height: auto;
   z-index: 1;
 }
 
+/* ====================== */
+/* Footer Article Line   */
+/* ====================== */
 .end-of-article {
   margin-top: 1rem;
   margin-bottom: 1.5rem;
@@ -175,6 +201,9 @@ code:not(.astro-code code) {
   border: none;
 }
 
+/* =============== */
+/* Blockquote     */
+/* =============== */
 blockquote {
   border-left: 2px solid var(--primary);
   padding: .75rem 1rem;
@@ -188,6 +217,9 @@ blockquote p {
   margin-bottom: 0;
 }
 
+/* =============== */
+/* Table Styling   */
+/* =============== */
 table {
   margin-top: 1rem;
   text-align: left;
