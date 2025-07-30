@@ -22,7 +22,7 @@ const {
 } = loadEnv(process.env.NODE_ENV!, process.cwd(), "");
 
 const config = defineConfig({
-  site: 'https://bar.netlify.app',
+  site: 'https://baracarlo.netlify.app',
   output: 'static',
   integrations: [
     expressiveCode({
