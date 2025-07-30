@@ -1,6 +1,6 @@
 ---
 title: "UIUCTF 2025"
-description: "goofy ahh write-up"
+description: "not finish yet"
 image: "../assets/uiu.png"
 createdAt: 07-29-2025
 draft: false
@@ -40,3 +40,397 @@ To recover the plaintext flag:
 2. For each possible pair `(a, b)` (with `b <= a`), compute the left-hand side `a^4 + b^4 - 17`.
 3. Binary search the RHS list for a match. If found:
 * Compute the possible c and check if d^4 = lhs - c^4 gives an integer d.
+4. If all constraints are met, compute `k = str(a*b*c*d).zfill(16).encode()` and decrypt the ciphertext.
+5. If the plaintext starts with `uiuctf{`, we have found the correct key and decrypted the flag.
+
+#### Solver
+```python
+from Crypto.Cipher import AES
+from array import array
+from bisect import bisect_left
+
+n = 20000
+fourth = [i**4 for i in range(n)]
+
+# Precompute all c^4 + d^4 pairs
+rhs = sorted(fourth[c] + fourth[d] for c in range(1, n) for d in range(1, c + 1))
+
+ct = bytes.fromhex("41593455378fed8c3bd344827a193bde7ec2044a3f7a3ca6fb77448e9de55155")
+
+for a in range(1, n):
+    for b in range(1, a + 1):
+        t = fourth[a] + fourth[b] - 17
+        if t > rhs[-1]: break
+        if rhs[bisect_left(rhs, t)] != t: continue
+        for c in range(1, n):
+            d4 = t - fourth[c]
+            if d4 < 1: break
+            d = round(d4 ** 0.25)
+            if 1 <= d <= c and fourth[d] == d4:
+                k = str(a * b * c * d).zfill(16).encode()
+                pt = AES.new(k, AES.MODE_ECB).decrypt(ct)
+                if pt.startswith(b'uiuctf{'):
+                    print(pt.decode())
+                    exit()
+```
+Flag: `uiuctf{D1oPh4nTine__Destr0yer__}`
+
+### too many primes
+#### Challenge Overview
+We are given a file named `chal.py`:
+```py
+from sympy import nextprime, randprime
+from sympy.core.random import seed
+from math import prod, gcd
+from Crypto.Util.number import bytes_to_long
+# from secret import phi_N, FLAG
+
+p = randprime(2**127, 2**128)
+N = 1
+while N < 2**2048:
+        N *= p
+        p = nextprime(p)
+
+assert gcd(phi_N, 65537) == 1
+
+pt = bytes_to_long(FLAG)
+ct = pow(pt, 65537, N)
+print("N = ", N)
+print("ct = ", ct)
+# N =  34546497157207880069779144631831207265231460152307441189118439470134817451040294541962595051467936974790601780839436065863454184794926578999811185968827621504669046850175311261350438632559611677118618395111752688984295293397503841637367784035822653287838715174342087466343269494566788538464938933299114092019991832564114273938460700654437085781899023664719672163757553413657400329448277666114244272477880443449956274432819386599220473627937756892769036756739782458027074917177880632030971535617166334834428052274726261358463237730801653954955468059535321422372540832976374412080012294606011959366354423175476529937084540290714443009720519542526593306377
+# ct =  32130352215164271133656346574994403191937804418876038099987899285740425918388836116548661879290345302496993945260385667068119439335225069147290926613613587179935141225832632053477195949276266017803704033127818390923119631817988517430076207710598936487746774260037498876812355794218544860496013734298330171440331211616461602762715807324092281416443801588831683678783343566735253424635251726943301306358608040892601269751843002396424155187122218294625157913902839943220894690617817051114073999655942113004066418001260441287880247349603218620539692362737971711719433735307458772641705989685797383263412327068222383880346012169152962953918108171850055943194
+```
+So bacically we are given an RSA-like cryptosystem where the modulus `N` is constructed by multiplying multiple consecutive primes, starting from a 127-bit prime. The public exponent is the standard `e = 65537`, and we are provided with the ciphertext `ct`.
+
+#### Observations
+1. **Modulus Construction**:
+* `N` is built by multiplying consecutive primes starting from a random prime `p` in the range `[2^127, 2^128)`.
+* The multiplication continues until `N` reaches at least 2048 bits in size.
+2. **Prime Count Estimation**:
+* Since `(2^127)^17 ≈ 2^2159` (which is greater than `2^2048`), and `(2^127)^16 ≈ 2^2032` (which is less than `2^2048`), we deduce that `N` is the product of **17 consecutive primes**.
+3. **Factoring Strategy:**:
+* Given that `N` is the product of 17 consecutive primes, we can estimate the approximate value of the first prime by taking the 17th root of `N`.
+* We then search for the exact starting prime within a reasonable range around this estimate.
+
+#### Strategy
+1. **Estimate the Starting Prime:**
+* Compute the integer 17th root of `N` to get an approximate value for the first prime.
+* Define a search window around this estimate (e.g., ±10000) to find the exact starting prime.
+2. **Find Consecutive Primes:**
+* For each candidate prime in the search window, generate the next 16 consecutive primes.
+* Multiply these primes together and check if the product matches `N`.
+3. **Compute Euler's Totient Function:**
+* Once the primes are found, compute `phi(N)` as the product of `(p_i - 1)` for each prime `p_i`.
+4. **Derive the Private Key:**
+* Compute the modular inverse of `e` modulo `phi(N)` to get the private exponent `d`.
+5. **Decrypt the Ciphertext:**
+* Use the private exponent `d` to decrypt the ciphertext `ct` and recover the plaintext flag.
+
+#### Solver
+```python
+from sympy import nextprime, isprime, integer_nthroot
+from math import prod
+from Crypto.Util.number import long_to_bytes
+
+N = 34546497157207880069779144631831207265231460152307441189118439470134817451040294541962595051467936974790601780839436065863454184794926578999811185968827621504669046850175311261350438632559611677118618395111752688984295293397503841637367784035822653287838715174342087466343269494566788538464938933299114092019991832564114273938460700654437085781899023664719672163757553413657400329448277666114244272477880443449956274432819386599220473627937756892769036756739782458027074917177880632030971535617166334834428052274726261358463237730801653954955468059535321422372540832976374412080012294606011959366354423175476529937084540290714443009720519542526593306377
+ct = 32130352215164271133656346574994403191937804418876038099987899285740425918388836116548661879290345302496993945260385667068119439335225069147290926613613587179935141225832632053477195949276266017803704033127818390923119631817988517430076207710598936487746774260037498876812355794218544860496013734298330171440331211616461602762715807324092281416443801588831683678783343566735253424635251726943301306358608040892601269751843002396424155187122218294625157913902839943220894690617817051114073999655942113004066418001260441287880247349603218620539692362737971711719433735307458772641705989685797383263412327068222383880346012169152962953918108171850055943194
+
+m = 17
+root, exact = integer_nthroot(N, m)
+print(f"Root: {root}")
+
+low = max(2**127, root - 10000)
+high = root + 10000
+print(f"Search window: {low} to {high}")
+
+p0 = low
+if p0 % 2 == 0:
+    p0 += 1
+found = False
+factors = []
+
+while p0 <= high:
+    if isprime(p0):
+        product = 1
+        factors = []
+        p = p0
+        for i in range(m):
+            factors.append(p)
+            product *= p
+            if product > N:
+                break
+            if i < m-1:
+                p = nextprime(p)
+        if product == N:
+            found = True
+            print(f"Found factors starting at {p0}")
+            break
+    p0 = nextprime(p0)
+
+if not found:
+    print("Factorization failed.")
+    exit(1)
+
+phi = 1
+for p in factors:
+    phi *= (p - 1)
+
+e = 65537
+d = pow(e, -1, phi)
+pt = pow(ct, d, N)
+flag = long_to_bytes(pt)
+print(flag)
+```
+**Output:**
+```txt
+Root: 242444312856123694689611504831894231744
+Search window: 242444312856123694689611504831894221744 to 242444312856123694689611504831894241744
+Found factors starting at 242444312856123694689611504831894230373
+b'uiuctf{D0nt_U5e_Cons3cUt1vE_PriMeS}'
+```
+Flag: `uiuctf{D0nt_U5e_Cons3cUt1vE_PriMeS}`
+
+### back to roots
+We are given a Python script (chal.py):
+```py
+from random import randint
+from decimal import Decimal, getcontext
+from hashlib import md5
+
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+
+from secret import FLAG
+
+K = randint(10**10, 10**11)
+print('K', K)
+leak = int( str( Decimal(K).sqrt() ).split('.')[-1] )
+
+print(f"leak = {leak}")
+ct = AES.new(
+        md5(f"{K}".encode()).digest(),
+        AES.MODE_ECB
+).encrypt(pad(FLAG, 16))
+
+print(f"ct = {ct.hex()}")
+```
+and a `output.txt` file:
+```txt
+leak = 4336282047950153046404
+ct = 7863c63a4bb2c782eb67f32928a1deceaee0259d096b192976615fba644558b2ef62e48740f7f28da587846a81697745
+```
+So the `chal.py` performs the following steps:
+1. Generates a random integer `K` between `10^10` and `10^11`.
+2. Computes the square root of `K` using high-precision arithmetic (`Decimal`).
+3. Extracts the **fractional part** (22 digits after the decimal) of `√K` and leaks it.
+4. Uses `K` to derive an AES key (via MD5) and encrypts the flag in ECB mode.
+
+Our goal is to:
+* **Recove** `K` from the leaked fractional part.
+* **Decrypt** the ciphertext to obtain the flag.
+
+#### Understanding the Leak
+The leak is the **fractional part** of `√K`, stored as a 22-digit integer:
+```txt
+leak = 4336282047950153046404
+```
+This means:
+```txt
+√K ≈ n.4336282047950153046404
+```
+where `n` is the integer part of `√K`.
+
+**Constraints**
+
+* `K` is between `10^10` and `10^11`.
+* Therefore, `√K` is between `10^5`(`100000.0`) and `~316227.766` (since `316227.766^2 ≈ 1e11`).
+
+Thus, `n` (the integer part of `√K`) must be in `[100000, 316227]`.
+
+#### Mathematical Approach to Recover `K`
+We need to find `K` such that:
+```txt
+√K ≈ n + (leak / 10^22)
+```
+Squaring both sides:
+```txt
+K ≈ (n + (leak / 10^22))^2
+```
+Expending:
+```txt
+K ≈ n² + (2 * n * leak) / 10^22 + (leak² / 10^44)
+```
+Since `leak² / 10^44` is extremely small (~`1.88e-1`), we can approximate:
+```text
+K ≈ n² + (2 * n * leak) / 10^22
+```
+But `K` must be an integer, so:
+```txt
+K = round(n² + (2 * n * leak) / 10^22)
+```
+**Verification**
+
+We can verify `K` by computing `√K` and checking if its fractional part matches the leak.
+
+#### Algorithm to Find K
+1. **Iterate over possible integer parts `n` (`100000 ≤ n ≤ 316227`).**
+2. **Compute** `K` = `round(n² + (2 * n * leak) / 10^22)`. 
+3. **Check if `K` is within bounds (`10^10 ≤ K ≤ 10^11`).**
+4. **Compute `√K` with high precision** and extract the fractional part.
+5. **Compare with the leak** to confirm correctness.
+
+#### Solver
+```python
+from decimal import Decimal, getcontext
+from hashlib import md5
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
+
+def recover_K_and_decrypt(leak, ct_hex):
+    M = 10**22
+    n_min = 100000
+    n_max = 316227
+
+    for n in range(n_min, n_max + 1):
+        # Compute K ≈ n² + (2 * n * leak) / 10^22
+        K = round(n**2 + (2 * n * leak) / M)
+
+        if K < 10**10 or K > 10**11:
+            continue
+
+        # Verify fractional part of √K matches leak
+        getcontext().prec = 30
+        sqrt_K = Decimal(K).sqrt()
+        fractional_part = str(sqrt_K).split('.')[-1][:22]
+
+        if len(fractional_part) < 22:
+            fractional_part = fractional_part.ljust(22, '0')
+
+        if int(fractional_part) == leak:
+            # Decrypt the flag
+            key = md5(str(K).encode()).digest()
+            cipher = AES.new(key, AES.MODE_ECB)
+            ct = bytes.fromhex(ct_hex)
+            flag = unpad(cipher.decrypt(ct), 16).decode()
+            return flag
+
+    return None
+
+leak = 4336282047950153046404
+ct_hex = "7863c63a4bb2c782eb67f32928a1deceaee0259d096b192976615fba644558b2ef62e48740f7f28da587846a81697745"
+
+flag = recover_K_and_decrypt(leak, ct_hex)
+print(flag)
+```
+Flag: `uiuctf{SQu4Re_Ro0T5_AR3nT_R4nD0M}`
+
+### symmetric
+#### Challenge Overview
+We are given a Python script (chal.py):
+```py
+from Crypto.Util.number import *
+from secret import FLAG
+
+p, q, r, s = [getPrime(512) for _ in "1234"]
+
+print(f"h1 = {p + q + r + s}")
+print(f"h2 = {p**2 + q**2 + r**2 + s**2}")
+print(f"h3 = {p**3 + q**3 + r**3 + s**3}")
+
+N = p*q*r*s
+print(f"N = {N}")
+pt = bytes_to_long(FLAG)
+ct = pow(pt, 65537, N)
+print(f"ct = {ct}")
+```
+and a `output.txt` file:
+```txt
+h1 = 44626154099651354925697068610752642661842459492769931945027538340211738148995902544351457443643808803963130274930824732652561687395268828472477422919262224
+h2 = 516671113554555861164166966331322883848052630063409185414998284127910160310316421085219788291486248715029393774584960034375836715001130337767354512063372620828300201147366138270597133744747341658011663632381219284289144790858167258162656417236910634201286428763727072739569460623482985066956478781223378673732
+h3 = 6147718474663450187001867904227777991349731066494841442199681943204194617136760567222545181562592364728655444222576167723225771866335920325045525027985716792468801076590684892140052786942251780392395274059384743594570343510311801194684613435002073956759521242578078411431891501758484581445964234548107005826532945720412531638919892681259687552977883437895032963223761216846303917338652743754915155934118353066174102436448393348040719582422022713292561416343278608
+N = 14184841414933523698606245433393907034474143715949896731683874356940146602876788990832087413915033843120975580859113356518777762025417525571528638829956003882418585702756644491932279294535883798799580861254646149745925137179207140600356428758736111639677698862407787386573263961111978517446397007747429416079059195916290615125084899002162504424765939524455434579218079962808920072946861658695379491917567048202142417165204141307476222251547098848515065051745905180788313450494477967398727631152936238366581978379130450660235139256967936160718128731512409111209840405772933034600016694225294481603355934917366484109057
+ct = 720607330561370237459911161481490697044029472780348552630924063963226757984368356580217337982783395620115957442082471977614781910209933696251479615689667675958354681196823652299435457532944189300223816303315625302472302494905575910600277892375951366031061219173465155686586206246661009612156094695841741309002508535764511343569015518587247600796520847856011377777228749182958947015029731456117404560626347774985507275302882865400315045173501559082431672490227728580592379740508214726249635835834752208899970446910850569489282065524329936561486377823093465841715608716032843259935185417766702677708267102415636848129
+```
+#### Observations
+This challenge involves recovering four prime numbers from given power sums and their product. The ciphertext is encrypted using RSA, and the goal is to decrypt it to obtain the flag.
+**Given Values:**
+* `h1 = p + q + r + s`
+* `h2 = p² + q² + r² + s²`
+* `h3 = p³ + q³ + r³ + s³`
+* `N = p * q * r * s`
+* `ct = pow(FLAG, 65537, N)`
+
+#### Strategy
+1. **Compute Elementary Symmetric Sums**
+
+Using Newton's identities, we derive the symmetric sums e1, e2, e3 from h1, h2, h3:
+* `e1 = h1`
+* `e2 = (e1² - h2) // 2`
+* `e3 = (h3 - e1*h2 + e2*e1) // 3`
+
+2. **Construct the Polynomial**
+
+The primes `p, q, r, s` are roots of the polynomial:
+`x⁴ - e1*x³ + e2*x² - e3*x + N`
+
+3. **Find the roots** 
+
+Solve the polynomial to obtain the four primes.
+
+4. **Verify the Primes**
+
+Ensure:
+* Their product equals `N`.
+* Their sum matches `h1`.
+
+5. **Decrypt the Ciphertext**
+* Compute `phi(N) = (p-1)(q-1)(r-1)(s-1)`
+* Compute the private key `d = inverse(65537, phi(N))`
+* Decrypt `ct` to get the flag.
+
+#### Solver
+```python
+from Crypto.Util.number import long_to_bytes, inverse
+import sympy
+
+# Given values
+h1 = 44626154099651354925697068610752642661842459492769931945027538340211738148995902544351457443643808803963130274930824732652561687395268828472477422919262224
+h2 = 516671113554555861164166966331322883848052630063409185414998284127910160310316421085219788291486248715029393774584960034375836715001130337767354512063372620828300201147366138270597133744747341658011663632381219284289144790858167258162656417236910634201286428763727072739569460623482985066956478781223378673732
+h3 = 6147718474663450187001867904227777991349731066494841442199681943204194617136760567222545181562592364728655444222576167723225771866335920325045525027985716792468801076590684892140052786942251780392395274059384743594570343510311801194684613435002073956759521242578078411431891501758484581445964234548107005826532945720412531638919892681259687552977883437895032963223761216846303917338652743754915155934118353066174102436448393348040719582422022713292561416343278608
+N = 14184841414933523698606245433393907034474143715949896731683874356940146602876788990832087413915033843120975580859113356518777762025417525571528638829956003882418585702756644491932279294535883798799580861254646149745925137179207140600356428758736111639677698862407787386573263961111978517446397007747429416079059195916290615125084899002162504424765939524455434579218079962808920072946861658695379491917567048202142417165204141307476222251547098848515065051745905180788313450494477967398727631152936238366581978379130450660235139256967936160718128731512409111209840405772933034600016694225294481603355934917366484109057
+ct = 720607330561370237459911161481490697044029472780348552630924063963226757984368356580217337982783395620115957442082471977614781910209933696251479615689667675958354681196823652299435457532944189300223816303315625302472302494905575910600277892375951366031061219173465155686586206246661009612156094695841741309002508535764511343569015518587247600796520847856011377777228749182958947015029731456117404560626347774985507275302882865400315045173501559082431672490227728580592379740508214726249635835834752208899970446910850569489282065524329936561486377823093465841715608716032843259935185417766702677708267102415636848129
+
+# Compute elementary symmetric sums
+e1 = h1
+e2 = (e1 * e1 - h2) // 2
+e3 = (h3 - e1 * h2 + e1 * e2) // 3
+
+# Construct polynomial x⁴ - e1*x³ + e2*x² - e3*x + N
+x = sympy.symbols('x')
+poly = sympy.Poly(x**4 - e1*x**3 + e2*x**2 - e3*x + N, x)
+
+# Find roots (primes)
+roots = sympy.roots(poly, multiple=True)
+primes = [int(r) for r in roots if r.is_integer and r > 0]
+
+# Verify solution
+assert len(primes) == 4
+assert N == primes[0] * primes[1] * primes[2] * primes[3]
+assert h1 == sum(primes)
+
+# Compute phi(N) and decrypt
+phi = 1
+for p in primes:
+    phi *= (p - 1)
+
+d = inverse(65537, phi)
+pt = pow(ct, d, N)
+flag = long_to_bytes(pt)
+
+# Output flag (handle non-UTF-8)
+try:
+    print(flag.decode())
+except UnicodeDecodeError:
+    print(flag.hex())
+```
+Flag: `uiuctf{5yMmeTRiC_P0lyS_FoRM_A_B4S15}`
