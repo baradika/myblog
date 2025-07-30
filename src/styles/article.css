@@ -17,16 +17,18 @@ article hr {
   background-color: #353535;
 }
 
+/* ✅ FIXED: Gambar agar tidak gepeng */
 p:has(img) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  text-align: center;
   margin-top: 1rem;
   margin-bottom: 1rem;
 }
 
 p img {
   max-width: 100%;
+  height: auto;
+  display: inline-block;
 }
 
 .toc-card {
@@ -60,7 +62,7 @@ p img {
   margin-left: 1rem;
 }
 
-.toc-li[data-depth="4"]{
+.toc-li[data-depth="4"] {
   margin-left: 2rem;
 }
 
@@ -159,7 +161,7 @@ code:not(.astro-code code) {
 }
 
 .article-image {
-  width: 100%;
+  width: auto;
   height: auto;
   z-index: 1;
 }
