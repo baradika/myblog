@@ -35,7 +35,7 @@ const config = defineConfig({
       openGraph: {
         home: {
           title: "b4r's site",
-          description: 'A minimalistic theme for Astro.'
+          description: 'Fase Rais Baradika - Personal website and blog',
         },
         blog: {
           title: 'Blog',

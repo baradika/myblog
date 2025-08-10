@@ -112,6 +112,9 @@ const { Content: About } = await render(about!);
 						<div class="work-experience-entry">
 							<span class="work-experience-duration">{entry.data.duration}</span>
 							<h3 class="work-experience-company">{entry.data.company}</h3>
+							{entry.data.description && (
+								<p class="work-experience-description">{entry.data.description}</p>
+							)}
 						</div>
 				))}
 			</div>
