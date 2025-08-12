@@ -29,26 +29,49 @@ const { Content: About } = await render(about!);
 	description={openGraph.home.description}
 	pagefindIgnore
 >
+	<!-- Left Sidebar -->
 	<div class="layout-grid-left" slot="left">
 		<Card class="flex-col-card">
-			<ImageGlow quality={100} width={80} height={80} src={ProfilePicture} alt="Louis looking out of a window" loading='eager' />
-			<h2>{name}</h2>
+			<div class="profile-section">
+				<ImageGlow 
+					quality={100} 
+					width={80} 
+					height={80} 
+					src={ProfilePicture} 
+					alt="Louis looking out of a window" 
+					loading='eager' 
+				/>
+				<h2>{name}</h2>
+			</div>
 			<ul class="overview-list">
 				{quickInfo.map((info) => (
 					<li>
-						<Icon type={info.data.icon.type} name={info.data.icon.name as any} width={24} height={24} class='glow-icon' />
+						<Icon 
+							type={info.data.icon.type} 
+							name={info.data.icon.name as any} 
+							width={24} 
+							height={24} 
+							class='glow-icon' 
+						/>
 						<span>{info.data.text}</span>
 					</li>
 				))}
 			</ul>
 		</Card>
+		
 		<Card>
 			<h3 class="no-mt">Socials</h3>
 			<ul class="overview-list">
 				{socials.map((item) => (
 					<li>
 						<a href={item.data.link} class="socials-link">
-							<Icon type={item.data.icon.type} name={item.data.icon.name as any} width={24} height={24} class='glow-icon' />
+							<Icon 
+								type={item.data.icon.type} 
+								name={item.data.icon.name as any} 
+								width={24} 
+								height={24} 
+								class='glow-icon' 
+							/>
 							<span>{item.data.text}</span>
 						</a>
 					</li>
@@ -56,7 +79,10 @@ const { Content: About } = await render(about!);
 			</ul>
 		</Card>
 	</div>
+
+	<!-- Right Content -->
 	<div class="layout-grid-right" slot="right">
+		<!-- About -->
 		<Card>
 			<div class="header-container">
 				<Icon type='lucide' name="user" width={24} height={24} class='glow-icon' />
@@ -66,40 +92,55 @@ const { Content: About } = await render(about!);
 				<About />
 			</div>
 		</Card>
-		<Card>
-			<div class="header-container">
-				<Icon type='lucide' name="rss" width={24} height={24} class='glow-icon' />
-				<h2>Latest Posts</h2>
-			</div>
-			<div class="content-container">
-				{posts.sort((a, b) => b.data.createdAt.getTime() - a.data.createdAt.getTime()).slice(0, 2).map((post) => (
-					<a href={`/blog/${post.id}`} class="post-container">
-						<div class="post-header">
-							<h3>{post.data.title}</h3>
-							<span class="post-date">{post.data.createdAt.toLocaleDateString()}</span>
-						</div>
-						<span>{post.data.description}</span>
-					</a>
-				))}
-			</div>
-		</Card>
-		<Card>
-			<div class="header-container">
-				<Icon type='lucide' name="folder-git" width={24} height={24} class='glow-icon' />
-				<h2>Latest Projects</h2>
-			</div>
-			<div class="content-container">
-				{projects.sort((a, b) => b.data.date.getTime() - a.data.date.getTime()).slice(0, 2).map((project) => (
-					<a href={`/projects/${project.id}`} class="post-container">
-						<div class="post-header">
-							<h3>{project.data.title}</h3>
-							<span class="post-date">{project.data.date.toLocaleDateString()}</span>
-						</div>
-						<span>{project.data.description}</span>
-					</a>
-				))}
-			</div>
-		</Card>
+
+		<!-- Posts and Projects Row -->
+		<div class="two-column-row">
+			<!-- Latest Posts -->
+			<Card>
+				<div class="header-container">
+					<Icon type='lucide' name="rss" width={24} height={24} class='glow-icon' />
+					<h2>Latest Posts</h2>
+				</div>
+				<div class="content-container">
+					{posts
+						.sort((a, b) => b.data.createdAt.getTime() - a.data.createdAt.getTime())
+						.slice(0, 2)
+						.map((post) => (
+						<a href={`/blog/${post.id}`} class="post-container">
+							<div class="post-header">
+								<h3>{post.data.title}</h3>
+								<span class="post-date">{post.data.createdAt.toLocaleDateString()}</span>
+							</div>
+							<span>{post.data.description}</span>
+						</a>
+					))}
+				</div>
+			</Card>
+
+			<!-- Latest Projects -->
+			<Card>
+				<div class="header-container">
+					<Icon type='lucide' name="folder-git" width={24} height={24} class='glow-icon' />
+					<h2>Latest Projects</h2>
+				</div>
+				<div class="content-container">
+					{projects
+						.sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+						.slice(0, 2)
+						.map((project) => (
+						<a href={`/projects/${project.id}`} class="post-container">
+							<div class="post-header">
+								<h3>{project.data.title}</h3>
+								<span class="post-date">{project.data.date.toLocaleDateString()}</span>
+							</div>
+							<span>{project.data.description}</span>
+						</a>
+					))}
+				</div>
+			</Card>
+		</div>
+
+		<!-- Achievements -->
 		<Card>
 			<div class="header-container">
 				<Icon type='lucide' name="medal" width={24} height={24} class='glow-icon' />
@@ -109,13 +150,15 @@ const { Content: About } = await render(about!);
 				{[...workExperience]
 					.sort((a, b) => Number(b.data.duration) - Number(a.data.duration))
 					.map((entry) => (
-						<div class="work-experience-entry">
+					<div class="work-experience-entry">
+						<div class="work-experience-header">
 							<span class="work-experience-duration">{entry.data.duration}</span>
 							<h3 class="work-experience-company">{entry.data.company}</h3>
-							{entry.data.description && (
-								<p class="work-experience-description">{entry.data.description}</p>
-							)}
 						</div>
+						{entry.data.description && (
+							<p class="work-experience-description">{entry.data.description}</p>
+						)}
+					</div>
 				))}
 			</div>
 		</Card>
