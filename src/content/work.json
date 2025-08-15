@@ -11,7 +11,7 @@
     "duration": "2025",
     "company": "[Province] 3rd In LKS Cybersecurity Category 2025",
     "title": "Astro Theme",
-    "description": "Third Winner LKS Cybersecurity DKI Jakarta Province ."
+    "description": "Third Winner LKS Cybersecurity DKI Jakarta Province."
   },
   {
     "id": 3,
@@ -22,6 +22,13 @@
   },
   {
     "id": 4,
+    "duration": "2025",
+    "company": "[International] 9th Place in BreachCTF 2025",
+    "title": "BreachCTF",
+    "description": "Ninth Winner BreachCTF 2025 held by Indian Institute of Technology Bombay."
+  },
+  {
+    "id": 5,
     "duration": "2025",
     "company": "[International] Write-up Contest Winner in BreachCTF 2025",
     "title": "BreachCTF",
